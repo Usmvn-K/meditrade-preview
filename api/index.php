@@ -1,6 +1,5 @@
 <?php
 
-// Ensure writable directories exist in AWS Lambda / Vercel's /tmp
 $dirs = [
     '/tmp/storage/framework/views',
     '/tmp/storage/framework/sessions',
@@ -15,7 +14,6 @@ foreach ($dirs as $dir) {
     }
 }
 
-// Override critical environment variables before Laravel boots
 putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
 putenv('APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php');
 putenv('APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php');
