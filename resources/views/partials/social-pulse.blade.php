@@ -1,0 +1,1 @@
+{{-- Social pulse widget removed --}}
