@@ -1,0 +1,15 @@
+{
+    admin off
+    auto_https off
+    frankenphp
+    order php_server before file_server
+}
+
+:{$PORT:80} {
+    root * /app/public
+    encode zstd br gzip
+
+    php_server {
+        try_files {path} index.php
+    }
+}

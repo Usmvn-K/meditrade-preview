@@ -14,14 +14,23 @@ foreach ($dirs as $dir) {
     }
 }
 
-putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
-putenv('APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php');
-putenv('APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php');
-putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
-putenv('APP_ROUTES_CACHE=/tmp/bootstrap/cache/routes.php');
-putenv('APP_EVENTS_CACHE=/tmp/bootstrap/cache/events.php');
-putenv('SESSION_DRIVER=cookie');
-putenv('LOG_CHANNEL=stderr');
-putenv('CACHE_DRIVER=array');
+$envOverrides = [
+    'VIEW_COMPILED_PATH' => '/tmp/storage/framework/views',
+    'APP_SERVICES_CACHE' => '/tmp/bootstrap/cache/services.php',
+    'APP_PACKAGES_CACHE' => '/tmp/bootstrap/cache/packages.php',
+    'APP_CONFIG_CACHE'   => '/tmp/bootstrap/cache/config.php',
+    'APP_ROUTES_CACHE'   => '/tmp/bootstrap/cache/routes.php',
+    'APP_EVENTS_CACHE'   => '/tmp/bootstrap/cache/events.php',
+    'SESSION_DRIVER'     => 'cookie',
+    'LOG_CHANNEL'        => 'stderr',
+    'CACHE_DRIVER'       => 'array',
+    'CACHE_STORE'        => 'array',
+];
+
+foreach ($envOverrides as $key => $value) {
+    putenv("{$key}={$value}");
+    $_ENV[$key] = $value;
+    $_SERVER[$key] = $value;
+}
 
 require __DIR__ . '/../public/index.php';
