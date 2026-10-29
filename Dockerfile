@@ -41,6 +41,9 @@ RUN mkdir -p \
 # Install production PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+# Ensure storage and bootstrap/cache permissions
+RUN chmod -R 777 storage bootstrap/cache
+
 # Expose default port
 EXPOSE 10000
 
