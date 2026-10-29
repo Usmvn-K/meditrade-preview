@@ -29,6 +29,8 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
+# Ensure Composer binary is available
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # If vendor directory does not exist, install composer dependencies
 RUN if [ ! -d "vendor" ]; then composer install --no-dev --optimize-autoloader --no-progress; fi
