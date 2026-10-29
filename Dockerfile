@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     curl \
     zip \
     unzip \
+    sqlite-dev \
     libxml2-dev \
     oniguruma-dev \
     libzip-dev \
@@ -17,6 +18,7 @@ RUN apk add --no-cache \
     && docker-php-ext-install \
     pdo \
     pdo_mysql \
+    pdo_sqlite \
     mbstring \
     xml \
     bcmath \
@@ -29,23 +31,26 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy application source code
 COPY . .
 
-# Ensure storage and bootstrap directories exist with proper write permissions
+# Create SQLite database file and set permissions
+RUN touch database/database.sqlite && chmod 777 database/database.sqlite
+
+# Ensure storage, bootstrap, and database directories exist with proper write permissions
 RUN mkdir -p \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     bootstrap/cache \
-    && chmod -R 777 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache database
 
 # Install production PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Ensure storage and bootstrap/cache permissions
-RUN chmod -R 777 storage bootstrap/cache
+# Ensure storage, bootstrap/cache, and database permissions
+RUN chmod -R 777 storage bootstrap/cache database
 
 # Expose default port
 EXPOSE 10000
 
-# Startup command to cache config/routes and start the built-in PHP web server
-CMD sh -c 'php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:${PORT:-10000} -t public'
+# Startup command to run migrations and start the built-in PHP web server
+CMD sh -c 'php artisan migrate --force && php -S 0.0.0.0:${PORT:-10000} -t public'
