@@ -1,27 +1,35 @@
-FROM dunglas/frankenphp:1-php8.3-alpine
+FROM php:8.2-cli-alpine
 
-# Install PHP extensions required by Laravel
-RUN install-php-extensions \
+# Set working directory
+WORKDIR /var/www/html
+
+# Install system dependencies and required PHP extensions
+# Note: openssl, tokenizer, json, and ctype are core built-in extensions in PHP 8.2+
+RUN apk add --no-cache \
+    git \
+    curl \
+    zip \
+    unzip \
+    libxml2-dev \
+    oniguruma-dev \
+    libzip-dev \
+    linux-headers \
+    && docker-php-ext-install \
+    pdo \
     pdo_mysql \
-    pdo_sqlite \
+    mbstring \
+    xml \
     bcmath \
     ctype \
-    fileinfo \
-    mbstring \
-    openssl \
-    tokenizer \
-    xml \
-    zip \
-    intl \
-    gd \
-    opcache
+    zip
 
-WORKDIR /app
+# Copy Composer binary from official composer:2 image
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy application files
-COPY . /app
+# Copy application source code
+COPY . .
 
-# Ensure storage and bootstrap directories exist with proper permissions
+# Ensure storage and bootstrap directories exist with proper write permissions
 RUN mkdir -p \
     storage/framework/cache \
     storage/framework/sessions \
@@ -29,19 +37,12 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
-# Ensure Composer binary is available
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# If vendor directory does not exist, install composer dependencies
-RUN if [ ! -d "vendor" ]; then composer install --no-dev --optimize-autoloader --no-progress; fi
+# Install production PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Copy FrankenPHP Caddyfile
-COPY Caddyfile /etc/caddy/Caddyfile
-COPY Caddyfile /app/Caddyfile
+# Expose default port
+EXPOSE 10000
 
-ENV PORT=80 \
-    APP_ENV=production \
-    APP_DEBUG=false \
-    LOG_CHANNEL=stderr
-
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+# Startup command to cache config/routes and start the built-in PHP web server
+CMD sh -c 'php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:${PORT:-10000} -t public'
